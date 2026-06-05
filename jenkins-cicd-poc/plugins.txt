@@ -31,6 +31,9 @@ junit                        # Publish JUnit XML test results
 timestamper                  # Adds timestamps to console output
 ws-cleanup                   # Clean workspace after build
 
+# --- Webhook / GitHub Integration ---
+github                       # Required for githubPush() trigger in Jenkinsfile
+                             # Plugin display name: "GitHub plugin"
+
 # ── Optional (nice for demos) ─────────────────────────────────
 # blueocean                  # Modern visual pipeline UI
-# github                     # GitHub webhook integration

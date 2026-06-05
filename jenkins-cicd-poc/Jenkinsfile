@@ -20,6 +20,11 @@ pipeline {
         APP_PORT       = '8080'
     }
 
+    triggers {
+        // Auto-trigger on every push / merge to kiro-demo branch via GitHub webhook
+        githubPush()
+    }
+
     options {
         timestamps()
         timeout(time: 30, unit: 'MINUTES')

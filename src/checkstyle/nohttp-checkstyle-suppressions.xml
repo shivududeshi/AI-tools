@@ -8,4 +8,7 @@
 	<suppress files="build[\\/].*" checks=".*"/>
 	<suppress files="target[\\/].*" checks=".*"/>
 	<suppress files=".+\.(jar|git|ico|p12|gif|jks|jpg|svg|log)" checks="NoHttp"/>
+	<!-- AWS EC2 Instance Metadata Service (IMDSv1) only works over http://.
+	     These are infra shell scripts, not application source code. -->
+	<suppress files="jenkins-cicd-poc[\\/].*\.(sh|txt|md)" checks="NoHttp"/>
 </suppressions>

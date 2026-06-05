@@ -252,38 +252,98 @@ The node status in Manage Jenkins → Nodes will show a **green circle**.
 1. Jenkins dashboard → **New Item**
 2. Name: `spring-petclinic-pipeline`
 3. Type: **Pipeline** → OK
-4. Configure:
-   - Pipeline Definition: **Pipeline script from SCM**
+4. Under **General** tab, check **"GitHub project"** and enter:
+   ```
+   https://github.com/shivududeshi/AI-tools
+   ```
+5. Under **Build Triggers**, check **"GitHub hook trigger for GITScm polling"**
+6. Under **Pipeline** section:
+   - Definition: **Pipeline script from SCM**
    - SCM: **Git**
    - Repository URL: `https://github.com/shivududeshi/AI-tools.git`
-   - Branch: `*/kiro-demo`
+   - Branch Specifier: `*/kiro-demo`
    - Script Path: `jenkins-cicd-poc/Jenkinsfile`
-5. Save
+7. Click **Save**
 
 No credentials needed — it's a public repository.
 
 ---
 
-## 9. Run the Pipeline
+## 9. Configure GitHub Webhook (auto-trigger on merge)
 
-Click **"Build Now"**.
+This makes Jenkins automatically run the pipeline whenever a commit is pushed or
+a PR is merged into the `kiro-demo` branch.
 
-The 3 stages will run on the agent:
+### Step 1 — Open your GitHub repo settings
+
+Go to: `https://github.com/shivududeshi/AI-tools` → **Settings** → **Webhooks** → **Add webhook**
+
+### Step 2 — Fill in the webhook form
+
+| Field | Value |
+|---|---|
+| Payload URL | `http://<JENKINS_SERVER_PUBLIC_IP>:8080/github-webhook/` |
+| Content type | `application/json` |
+| Secret | *(leave blank for a public repo)* |
+| Which events? | **Just the push event** |
+| Active | ✅ checked |
+
+Click **Add webhook**.
+
+> **Important:** The trailing slash in `/github-webhook/` is required.
+> GitHub must be able to reach your Jenkins server IP on port 8080 from the internet.
+> Ensure your Jenkins Server security group allows port 8080 from `0.0.0.0/0`.
+
+### Step 3 — Verify webhook delivery
+
+On the Webhooks page, click on the webhook you just created → **Recent Deliveries**.
+GitHub sends a `ping` event immediately. You should see a green ✅ with HTTP 200.
+If you see a red ✗, check that `<JENKINS_SERVER_PUBLIC_IP>:8080` is publicly reachable.
+
+### How auto-trigger works
+
+```
+Developer merges PR → kiro-demo branch
+        │
+        ▼
+GitHub sends POST to http://<JENKINS_SERVER_IP>:8080/github-webhook/
+        │
+        ▼
+Jenkins receives the push event
+        │
+        ▼
+spring-petclinic-pipeline triggers automatically
+        │
+        ▼
+Runs on petclinic-agent: Get Code → Build Artifact → Deploy Application
+```
+
+---
+
+## 10. Run the Pipeline (First Manual Run)
+
+After saving the job, trigger it once manually to confirm everything works
+before relying on the webhook.
+
+Click **"Build Now"** on the `spring-petclinic-pipeline` job.
+
+The 3 stages will run on `petclinic-agent`:
 
 ```
 ┌─────────────┐    ┌──────────────────┐    ┌─────────────────────┐
 │  Get Code   │───►│  Build Artifact  │───►│ Deploy Application  │
 │             │    │                  │    │                     │
 │ git clone   │    │ mvn clean package│    │ docker build        │
-│ from GitHub │    │ archives JAR     │    │ docker run :8080    │
+│ from GitHub │    │ -DskipTests      │    │ docker run :8080    │
+│ kiro-demo   │    │ archives JAR     │    │ health check loop   │
 └─────────────┘    └──────────────────┘    └─────────────────────┘
 ```
 
-Click any stage box to see its console output.
+Click any stage box in **Stage View** to see its console output.
 
 ---
 
-## 10. Verify Deployment
+## 11. Verify Deployment
 
 **Check the application in your browser:**
 ```
@@ -305,6 +365,17 @@ docker ps
 
 docker logs petclinic-container
 ```
+
+**Test the auto-trigger:**
+```bash
+# Push any commit to kiro-demo branch
+git checkout kiro-demo
+echo "# trigger" >> README.md
+git add README.md
+git commit -m "test: trigger Jenkins webhook"
+git push origin kiro-demo
+```
+Within a few seconds, Jenkins should start a new build automatically.
 
 ---
 
