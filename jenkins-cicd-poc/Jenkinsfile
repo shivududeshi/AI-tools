@@ -12,8 +12,8 @@ pipeline {
     agent { label 'petclinic-agent' }
 
     environment {
-        GITHUB_REPO    = 'https://github.com/spring-projects/spring-petclinic.git'
-        GITHUB_BRANCH  = 'main'
+        GITHUB_REPO    = 'https://github.com/shivududeshi/AI-tools.git'
+        GITHUB_BRANCH  = 'kiro-demo'
         DOCKER_IMAGE   = 'petclinic-app'
         DOCKER_TAG     = "${BUILD_NUMBER}"
         CONTAINER_NAME = 'petclinic-container'

@@ -255,8 +255,8 @@ The node status in Manage Jenkins → Nodes will show a **green circle**.
 4. Configure:
    - Pipeline Definition: **Pipeline script from SCM**
    - SCM: **Git**
-   - Repository URL: `https://github.com/spring-projects/spring-petclinic.git`
-   - Branch: `*/main`
+   - Repository URL: `https://github.com/shivududeshi/AI-tools.git`
+   - Branch: `*/kiro-demo`
    - Script Path: `jenkins-cicd-poc/Jenkinsfile`
 5. Save
 
