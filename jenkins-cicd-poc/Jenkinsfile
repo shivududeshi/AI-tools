@@ -21,7 +21,8 @@ pipeline {
     }
 
     triggers {
-        // Auto-trigger on every push / merge to kiro-demo branch via GitHub webhook
+        // Webhook-only trigger — fires when GitHub sends a push event to:
+        // http://13.126.252.249:8080/github-webhook/
         githubPush()
     }
 
