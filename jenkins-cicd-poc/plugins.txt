@@ -1,0 +1,36 @@
+# ============================================================
+# Jenkins Plugins Required for this POC
+# Install via: Manage Jenkins → Plugins → Available Plugins
+#
+# Launch method used: Launch agents via SSH
+# (NOT JNLP — no token, no agent.jar command needed)
+# ============================================================
+
+# --- Pipeline ---
+workflow-aggregator          # Core Pipeline support (declarative + scripted)
+pipeline-stage-view          # Stage View in the Jenkins classic UI
+
+# --- Source Control ---
+git                          # Git checkout support in pipelines
+
+# --- Agent / SSH ---
+ssh-slaves                   # "Launch agents via SSH" — REQUIRED for this POC
+                             # Plugin display name: "SSH Build Agents"
+
+# --- Docker ---
+docker-plugin                # Docker build/run support
+docker-workflow              # Docker Pipeline DSL (docker.build, docker.withRegistry)
+
+# --- Credentials ---
+credentials-binding          # Bind credentials to env vars in pipeline steps
+
+# --- Test Reporting ---
+junit                        # Publish JUnit XML test results
+
+# --- Utility ---
+timestamper                  # Adds timestamps to console output
+ws-cleanup                   # Clean workspace after build
+
+# ── Optional (nice for demos) ─────────────────────────────────
+# blueocean                  # Modern visual pipeline UI
+# github                     # GitHub webhook integration

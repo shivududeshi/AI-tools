@@ -1,0 +1,131 @@
+// ============================================================
+// Jenkinsfile — Spring PetClinic CI/CD Pipeline
+// Declarative Pipeline | 3 Stages ONLY
+//
+// Stage 1: Get Code        → clone from GitHub
+// Stage 2: Build Artifact  → mvn clean package
+// Stage 3: Deploy          → docker build + docker run
+// ============================================================
+
+pipeline {
+
+    agent { label 'petclinic-agent' }
+
+    environment {
+        GITHUB_REPO    = 'https://github.com/spring-projects/spring-petclinic.git'
+        GITHUB_BRANCH  = 'main'
+        DOCKER_IMAGE   = 'petclinic-app'
+        DOCKER_TAG     = "${BUILD_NUMBER}"
+        CONTAINER_NAME = 'petclinic-container'
+        APP_PORT       = '8080'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+    }
+
+    stages {
+
+        // ── Stage 1: Get Code ─────────────────────────────────
+        stage('Get Code') {
+            steps {
+                echo "========== Stage 1: Get Code =========="
+                echo "Cloning ${GITHUB_REPO} (branch: ${GITHUB_BRANCH})"
+
+                git branch: "${GITHUB_BRANCH}",
+                    url: "${GITHUB_REPO}"
+
+                echo "Source code ready:"
+                sh 'ls -la'
+            }
+        }
+
+        // ── Stage 2: Build Artifact ───────────────────────────
+        stage('Build Artifact') {
+            steps {
+                echo "========== Stage 2: Build Artifact =========="
+                echo "Running Maven build..."
+
+                sh '''
+                    chmod +x mvnw
+                    ./mvnw clean package -DskipTests -B --no-transfer-progress
+                '''
+
+                echo "Build complete. Artifact:"
+                sh 'ls -lh target/*.jar'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
+
+        // ── Stage 3: Deploy Application ───────────────────────
+        stage('Deploy Application') {
+            steps {
+                echo "========== Stage 3: Deploy Application =========="
+
+                // Build Docker image
+                sh """
+                    docker build \
+                        -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                        -t ${DOCKER_IMAGE}:latest \
+                        -f jenkins-cicd-poc/Dockerfile \
+                        .
+                """
+
+                // Stop and remove any previously running container
+                sh """
+                    docker stop ${CONTAINER_NAME} 2>/dev/null || true
+                    docker rm   ${CONTAINER_NAME} 2>/dev/null || true
+                """
+
+                // Start the new container
+                sh """
+                    docker run -d \
+                        --name ${CONTAINER_NAME} \
+                        --restart unless-stopped \
+                        -p ${APP_PORT}:8080 \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG}
+                """
+
+                // Wait for the application to be healthy (max 90 s)
+                sh '''
+                    echo "Waiting for application to start..."
+                    for i in $(seq 1 18); do
+                        STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                                 http://localhost:8080/actuator/health || echo "000")
+                        echo "  Attempt $i — HTTP $STATUS"
+                        if [ "$STATUS" = "200" ]; then
+                            echo "Application is UP."
+                            exit 0
+                        fi
+                        sleep 5
+                    done
+                    echo "ERROR: Application did not become healthy within 90 seconds."
+                    docker logs petclinic-container
+                    exit 1
+                '''
+
+                echo "PetClinic deployed → http://<AGENT-IP>:${APP_PORT}"
+            }
+            post {
+                failure {
+                    sh 'docker logs ${CONTAINER_NAME} || true'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline SUCCESS — Build #${BUILD_NUMBER} deployed."
+        }
+        failure {
+            echo "Pipeline FAILED — check stage logs above."
+        }
+    }
+}
