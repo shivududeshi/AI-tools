@@ -16,8 +16,8 @@
 | OS | Ubuntu 24.04 LTS |
 | Repository | https://github.com/shivududeshi/AI-tools.git |
 | Branch | kiro-demo |
-| Application URL | http://13.235.134.82:8080 |
-| Jenkins URL | http://13.126.252.249:8080 |
+| Application URL | http://13.127.92.221:8080 |
+| Jenkins URL | http://13.233.198.115:8080 |
 | Status | ✅ LIVE — Build #4 SUCCESS |
 
 ---
@@ -71,7 +71,7 @@ Developer pushes / merges PR → kiro-demo branch
   ┌─────────────────────────┐        ┌─────────────────────────┐
   │   Jenkins Server EC2    │  SSH   │   Jenkins Agent EC2     │
   │   t2.micro              │◄──────►│   t2.small              │
-  │   13.126.252.249:8080   │        │   13.235.134.82         │
+  │   13.233.198.115:8080   │        │   13.127.92.221         │
   │                         │        │                         │
   │   Docker container:     │        │   • Java 17             │
   │   jenkins:lts-jdk17     │        │   • Docker CE           │
@@ -89,7 +89,7 @@ Developer pushes / merges PR → kiro-demo branch
                                     ┌──────────────────────────┐
                                     │  petclinic-container     │
                                     │  port 8080               │
-                                    │  http://13.235.134.82:   │
+                                    │  http://13.127.92.221:   │
                                     │  8080  ← PetClinic UI    │
                                     └──────────────────────────┘
 ```
@@ -100,8 +100,8 @@ Developer pushes / merges PR → kiro-demo branch
 
 | Component | Details |
 |---|---|
-| Jenkins Server | t2.micro · Ubuntu 24.04 · 20GB gp3 · IP: 13.126.252.249 |
-| Jenkins Agent | t2.small · Ubuntu 24.04 · 20GB gp3 · IP: 13.235.134.82 |
+| Jenkins Server | t2.micro · Ubuntu 24.04 · 20GB gp3 · IP: 13.233.198.115 |
+| Jenkins Agent | t2.small · Ubuntu 24.04 · 20GB gp3 · IP: 13.127.92.221 |
 | VPC | Default VPC — same public subnet |
 | Jenkins deployment | Docker container (`jenkins/jenkins:lts-jdk17`) |
 | Agent connection | SSH launch (server initiates SSH into agent) |
@@ -158,7 +158,7 @@ Two Ubuntu 24.04 LTS EC2 instances in the same public subnet of the default VPC:
 | Instance type | t2.micro | t2.small |
 | Storage | 20 GB gp3 | 20 GB gp3 |
 | Key pair | Same `.pem` file | Same `.pem` file |
-| Public IP | 13.126.252.249 | 13.235.134.82 |
+| Public IP | 13.233.198.115 | 13.127.92.221 |
 | Private IP | — | 10.0.3.79 |
 
 > **Why t2.small for agent?** The agent runs `mvn clean package` + `docker build` for a Spring Boot app which requires ~600–800 MB heap. t2.micro (1GB RAM) causes OOM during Maven compilation. t2.small (2GB) provides enough headroom for a stable demo.
@@ -174,8 +174,8 @@ Two Ubuntu 24.04 LTS EC2 instances in the same public subnet of the default VPC:
 SSH'd into the Jenkins Server EC2 and ran `jenkins-server-setup.sh`:
 
 ```bash
-scp -i your-key.pem jenkins-cicd-poc/jenkins-server-setup.sh ubuntu@13.126.252.249:~
-ssh -i your-key.pem ubuntu@13.126.252.249
+scp -i your-key.pem jenkins-cicd-poc/jenkins-server-setup.sh ubuntu@13.233.198.115:~
+ssh -i your-key.pem ubuntu@13.233.198.115
 chmod +x jenkins-server-setup.sh
 sudo ./jenkins-server-setup.sh
 ```
@@ -217,7 +217,7 @@ docker run -d \
 
 ### Steps performed
 
-1. Opened `http://13.126.252.249:8080`
+1. Opened `http://13.233.198.115:8080`
 2. Unlocked Jenkins with the initial admin password:
    ```bash
    docker exec jenkins-server cat /var/jenkins_home/secrets/initialAdminPassword
@@ -234,7 +234,7 @@ docker run -d \
 
 5. Restarted Jenkins after plugin install
 6. Created admin user
-7. Set Jenkins URL: Manage Jenkins → System → Jenkins URL → `http://13.126.252.249:8080/`
+7. Set Jenkins URL: Manage Jenkins → System → Jenkins URL → `http://13.233.198.115:8080/`
 8. Added SSH credential for agent:
    - Manage Jenkins → Credentials → System → Global → Add Credentials
    - Kind: `SSH Username with private key`
@@ -251,8 +251,8 @@ docker run -d \
 SSH'd into the agent and ran `jenkins-agent-setup.sh`:
 
 ```bash
-scp -i your-key.pem jenkins-cicd-poc/jenkins-agent-setup.sh ubuntu@13.235.134.82:~
-ssh -i your-key.pem ubuntu@13.235.134.82
+scp -i your-key.pem jenkins-cicd-poc/jenkins-agent-setup.sh ubuntu@13.127.92.221:~
+ssh -i your-key.pem ubuntu@13.127.92.221
 chmod +x jenkins-agent-setup.sh
 sudo ./jenkins-agent-setup.sh
 ```
@@ -316,7 +316,7 @@ Jenkins dashboard → New Item → `petclinic-pipeline` → Pipeline → OK
 ```groovy
 triggers {
     // Webhook-only trigger — fires when GitHub sends a push event to:
-    // http://13.126.252.249:8080/github-webhook/
+    // http://13.233.198.115:8080/github-webhook/
     // No SCM polling. Pipeline runs only when GitHub calls the webhook.
     githubPush()
 }
@@ -350,7 +350,7 @@ Developer pushes commit / merges PR → kiro-demo
 GitHub detects push event
         │
         ▼
-GitHub POST → http://13.126.252.249:8080/github-webhook/
+GitHub POST → http://13.233.198.115:8080/github-webhook/
         │
         ▼
 Jenkins GitHub plugin receives event
@@ -373,7 +373,7 @@ Go to: `https://github.com/shivududeshi/AI-tools` → **Settings** → **Webhook
 
 | Field | Value |
 |---|---|
-| Payload URL | `http://13.126.252.249:8080/github-webhook/` |
+| Payload URL | `http://13.233.198.115:8080/github-webhook/` |
 | Content type | `application/json` |
 | Secret | *(leave blank for a public repo)* |
 | Which events? | **Just the push event** |
@@ -408,7 +408,7 @@ git push origin kiro-demo
 ```
 
 Within 2–5 seconds, Jenkins should start a new build automatically. You can watch it at:
-`http://13.126.252.249:8080/job/petclinic-pipeline/`
+`http://13.233.198.115:8080/job/petclinic-pipeline/`
 
 ### Jenkins URL requirement for webhooks
 
@@ -417,9 +417,9 @@ For GitHub webhooks to reach Jenkins, the **Jenkins URL** setting must match the
 Verified via Groovy:
 ```groovy
 import jenkins.model.JenkinsLocationConfiguration
-JenkinsLocationConfiguration.get().setUrl('http://13.126.252.249:8080/')
+JenkinsLocationConfiguration.get().setUrl('http://13.233.198.115:8080/')
 JenkinsLocationConfiguration.get().save()
-// Result: Jenkins URL updated to: http://13.126.252.249:8080/
+// Result: Jenkins URL updated to: http://13.233.198.115:8080/
 ```
 
 This URL is what Jenkins uses to build the `/github-webhook/` endpoint path that GitHub calls.
@@ -456,17 +456,17 @@ The AWS EC2 Instance Metadata Service (IMDSv1) only operates over `http://` — 
 
 ```bash
 # Health endpoint
-curl http://13.235.134.82:8080/actuator/health
+curl http://13.127.92.221:8080/actuator/health
 # Response: {"groups":["liveness","readiness"],"status":"UP"}
 
 # Root URL
-curl -o /dev/null -w "%{http_code}" http://13.235.134.82:8080/
+curl -o /dev/null -w "%{http_code}" http://13.127.92.221:8080/
 # Response: 200
 ```
 
 | Check | Result |
 |---|---|
-| Application URL | http://13.235.134.82:8080 ✅ |
+| Application URL | http://13.127.92.221:8080 ✅ |
 | `/actuator/health` | `{"status":"UP"}` ✅ |
 | HTTP root | 200 OK ✅ |
 | Response time | ~54ms ✅ |
@@ -612,8 +612,8 @@ Stage 2 — runtime (eclipse-temurin:17-jre-jammy):
 | 1 | Agent: `Failed to mkdir /home/jenkins` | Remote root `/home/jenkins` didn't exist; `ubuntu` user can't write to `/home` | Changed remote root to `/home/ubuntu/agent` in node config |
 | 2 | Agent: `java: command not found (exit 127)` | Java not installed on agent EC2 | Installed `openjdk-17-jdk-headless` on agent |
 | 3 | Pipeline builds #1–#3: checkstyle BUILD FAILURE | `nohttp-checkstyle` rejected `http://169.254.169.254` (AWS metadata URL, must be `http://`) | Added `jenkins-cicd-poc/` suppression in `nohttp-checkstyle-suppressions.xml` |
-| 4 | Jenkins MCP server not connecting | Config pointed to stale IP `13.233.233.174` | Updated `~/.kiro/settings/mcp.json` to `13.126.252.249` |
-| 5 | Jenkins URL wrong (old IP in System config) | EC2 restarted, public IP changed from `13.233.233.174` to `13.126.252.249` | Updated via Groovy: `JenkinsLocationConfiguration.get().setUrl(...)` |
+| 4 | Jenkins MCP server not connecting | Config pointed to stale IP `13.233.233.174` | Updated `~/.kiro/settings/mcp.json` to `13.233.198.115` |
+| 5 | Jenkins URL wrong (old IP in System config) | EC2 restarted, public IP changed from `13.233.233.174` to `13.233.198.115` | Updated via Groovy: `JenkinsLocationConfiguration.get().setUrl(...)` |
 | 6 | SCMTrigger (`* * * * *`) present alongside webhook trigger | Originally created with both triggers; polling is redundant with webhooks | Removed `SCMTrigger` from live job config via MCP — webhook-only now |
 
 ---
@@ -680,14 +680,14 @@ All changes were committed to the `kiro-demo` branch — the pipeline, Dockerfil
 ## Final Result
 
 ```
-✅ Jenkins running in Docker on EC2         http://13.126.252.249:8080
-✅ Jenkins System URL                       http://13.126.252.249:8080/ (correct)
+✅ Jenkins running in Docker on EC2         http://13.233.198.115:8080
+✅ Jenkins System URL                       http://13.233.198.115:8080/ (correct)
 ✅ Jenkins agent connected via SSH          petclinic-agent (online, 10.0.3.79)
 ✅ Pipeline job created                     petclinic-pipeline
 ✅ Build trigger                            GitHub webhook only (no SCM polling)
-✅ GitHub webhook endpoint                  http://13.126.252.249:8080/github-webhook/
+✅ GitHub webhook endpoint                  http://13.233.198.115:8080/github-webhook/
 ✅ Build #4                                 SUCCESS — all 3 stages passed
-✅ Spring PetClinic deployed                http://13.235.134.82:8080
+✅ Spring PetClinic deployed                http://13.127.92.221:8080
 ✅ Health check                             {"status":"UP"} (HTTP 200, ~54ms)
 ```
 
