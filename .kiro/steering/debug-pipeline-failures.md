@@ -8,6 +8,24 @@ The objective is to identify the root cause quickly, gather supporting evidence,
 
 ---
 
+# Non-Negotiable Rules
+
+These rules apply in every session, every time, without exception:
+
+1. **Never assume a root cause without reading the logs.** Console output, container logs, and build metadata must all be collected and read in full before any diagnosis is made.
+
+2. **Never stop at the first suspicious log line.** Read the complete output — the real error is often further down (e.g., container startup exception buried after health check output).
+
+3. **Always follow the full debugging workflow defined in this document and in the cicd-pipeline-power POWER.md.** No shortcuts. No skipping steps. No diagnosing before evidence is fully collected.
+
+4. **Never modify Jenkinsfile, Dockerfile, or any configuration based on an assumption.** Changes are only made after the root cause is confirmed from log evidence.
+
+5. **If a fix is wrong, admit it, revert it, and re-investigate from the evidence — not from guesses.**
+
+---
+
+---
+
 # Primary Power
 
 When a pipeline-related issues are reported, Kiro should first activate:
