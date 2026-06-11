@@ -18,6 +18,11 @@ pipeline {
         DOCKER_TAG     = "${BUILD_NUMBER}"
         CONTAINER_NAME = 'petclinic-container'
         APP_PORT       = '8080'
+
+        // MySQL — values injected from Jenkins credentials
+        MYSQL_URL  = credentials('MYSQL_URL')
+        MYSQL_USER = credentials('MYSQL_USER')
+        MYSQL_PASS = credentials('MYSQL_PASS')
     }
 
     triggers {
@@ -88,12 +93,17 @@ pipeline {
                     docker rm   ${CONTAINER_NAME} 2>/dev/null || true
                 """
 
-                // Start the new container
+                // Start the new container with MySQL profile
                 sh """
                     docker run -d \
                         --name ${CONTAINER_NAME} \
+                        --network petclinic-net \
                         --restart unless-stopped \
                         -p ${APP_PORT}:8080 \
+                        -e SPRING_PROFILES_ACTIVE=mysql \
+                        -e MYSQL_URL=${MYSQL_URL} \
+                        -e MYSQL_USER=${MYSQL_USER} \
+                        -e MYSQL_PASS=${MYSQL_PASS} \
                         ${DOCKER_IMAGE}:${DOCKER_TAG}
                 """
 
