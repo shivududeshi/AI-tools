@@ -42,6 +42,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### Kiro — powers contain MCP secrets, never commit ###
+.kiro/powers/
+
 ### CSS ###
 _site/
 *.css
