@@ -10,7 +10,7 @@ The objective is to identify the root cause quickly, gather supporting evidence,
 
 # Primary Power
 
-When a pipeline-related issue is reported, Kiro should first activate:
+When a pipeline-related issues are reported, Kiro should first activate:
 
 Power:
 cicd-pipeline-power
